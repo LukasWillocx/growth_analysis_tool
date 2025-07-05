@@ -1,0 +1,177 @@
+/* Custom styles for Growth Data Analysis Dashboard */
+
+/* Main layout improvements */
+.content-wrapper {
+  background-color: #f8f9fa;
+}
+
+/* Box styling */
+.box {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border: none;
+}
+
+.box-header {
+  border-radius: 8px 8px 0 0;
+}
+
+/* Button styling */
+.btn-primary {
+  background-color: #2E86AB;
+  border-color: #2E86AB;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #236d91;
+  border-color: #236d91;
+  transform: translateY(-1px);
+}
+
+.btn-success {
+  background-color: #28a745;
+  border-color: #28a745;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+  transform: translateY(-1px);
+}
+
+/* Data table styling */
+.dataTables_wrapper {
+  margin-top: 15px;
+}
+
+table.dataTable {
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #dee2e6;
+}
+
+table.dataTable thead th {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+  font-weight: 600;
+  color: #495057;
+  padding: 12px 8px;
+}
+
+table.dataTable tbody td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+table.dataTable tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Input styling */
+.form-control {
+  border-radius: 6px;
+  border: 1px solid #ced4da;
+  transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: #2E86AB;
+  box-shadow: 0 0 0 0.2rem rgba(46, 134, 171, 0.25);
+}
+
+/* Sidebar styling */
+.sidebar-menu > li.active > a {
+  background-color: #2E86AB;
+  border-left: 3px solid #1a5b7a;
+}
+
+.sidebar-menu > li > a:hover {
+  background-color: #3a94bd;
+  transition: background-color 0.3s ease;
+}
+
+/* Plot container */
+.plotly {
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Notification styling */
+.shiny-notification {
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.shiny-notification-content {
+  font-weight: 500;
+}
+
+/* Progress bar */
+.progress {
+  background-color: #e9ecef;
+  border-radius: 6px;
+  height: 6px;
+}
+
+.progress-bar {
+  background-color: #2E86AB;
+  transition: width 0.3s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .box {
+    margin-bottom: 15px;
+  }
+  
+  .btn {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  
+  table.dataTable {
+    font-size: 12px;
+  }
+}
+
+/* Custom spacing */
+.margin-top-20 {
+  margin-top: 20px;
+}
+
+.margin-bottom-20 {
+  margin-bottom: 20px;
+}
+
+/* Verbatim output styling */
+pre {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 15px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #495057;
+}
+
+/* Header improvements */
+.main-header .navbar {
+  background-color: #2E86AB;
+}
+
+.main-header .logo {
+  background-color: #1a5b7a;
+}
+
+.main-header .logo:hover {
+  background-color: #1a5b7a;
+}
