@@ -39,23 +39,15 @@ ui <- dashboardPage(
                   width = 12,
                   
                   fluidRow(
-                    column(3,
+                    column(4,
                            numericInput("n_timepoints", "Number of Time Points:", 
                                         value = 10, min = 3, max = 500, step = 1)
                     ),
-                    column(3,
+                    column(4,
                            numericInput("n_replicates", "Number of Replicates:", 
                                         value = 3, min = 1, max = 20, step = 1)
                     ),
-                    column(3,
-                           selectInput("data_structure", "Data Structure:",
-                                       choices = list(
-                                         "Wide Format (Time × Replicates)" = "wide",
-                                         "Long Format (Time, Replicate, Value)" = "long"
-                                       ),
-                                       selected = "wide")
-                    ),
-                    column(3,
+                    column(4,
                            br(),
                            actionButton("create_table", "Create Data Table", 
                                         class = "btn-primary")
@@ -100,15 +92,9 @@ ui <- dashboardPage(
                     br(),
                     
                     fluidRow(
-                      column(6,
+                      column(12,
                              actionButton("process_data", "Process Data", 
                                           class = "btn-success", icon = icon("check"))
-                      ),
-                      column(6,
-                             downloadButton("download_template", "Download Template", 
-                                            class = "btn-info"),
-                             fileInput("upload_data", "Upload CSV", 
-                                       accept = c(".csv"))
                       )
                     ),
                     
@@ -265,24 +251,15 @@ server <- function(input, output, session) {
   
   # Create initial data table
   observeEvent(input$create_table, {
-    if(input$data_structure == "wide") {
-      # Wide format: Time column + Replicate columns
-      col_names <- c("Time", paste0("Rep_", 1:input$n_replicates))
-      df <- data.frame(matrix(NA, nrow = input$n_timepoints, ncol = length(col_names)))
-      colnames(df) <- col_names
-      # Create a proper time sequence with empty cells for replicates
-      df$Time <- seq(0, input$n_timepoints - 1, by = 1)
-      # Set replicate columns to proper NA
-      for(i in 2:ncol(df)) {
-        df[, i] <- as.numeric(NA)
-      }
-    } else {
-      # Long format: Time, Replicate, Value
-      df <- data.frame(
-        Time = rep(seq(0, input$n_timepoints - 1, by = 1), each = input$n_replicates),
-        Replicate = rep(1:input$n_replicates, times = input$n_timepoints),
-        Value = as.numeric(NA)
-      )
+    # Wide format only: Time column + Replicate columns
+    col_names <- c("Time", paste0("Rep_", 1:input$n_replicates))
+    df <- data.frame(matrix(NA, nrow = input$n_timepoints, ncol = length(col_names)))
+    colnames(df) <- col_names
+    # Create a proper time sequence with empty cells for replicates
+    df$Time <- seq(0, input$n_timepoints - 1, by = 1)
+    # Set replicate columns to proper NA
+    for(i in 2:ncol(df)) {
+      df[, i] <- as.numeric(NA)
     }
     
     values$raw_data <- df
@@ -305,20 +282,12 @@ server <- function(input, output, session) {
       hot_table(highlightCol = TRUE, highlightRow = TRUE) %>%
       hot_context_menu(allowRowEdit = TRUE, allowColEdit = FALSE)
     
-    # Configure column types more explicitly
-    if(input$data_structure == "wide") {
-      # First column is Time - make it numeric
-      ht <- ht %>% hot_col(1, type = "numeric", format = "0.000", allowInvalid = FALSE)
-      # Remaining columns are replicates - make them numeric with proper decimal handling
-      for(i in 2:ncol(values$raw_data)) {
-        ht <- ht %>% hot_col(i, type = "numeric", format = "0.000", allowInvalid = FALSE)
-      }
-    } else {
-      # Long format: Time and Value are numeric, Replicate is integer
-      ht <- ht %>% 
-        hot_col(1, type = "numeric", format = "0.000", allowInvalid = FALSE) %>%  # Time
-        hot_col(2, type = "numeric", format = "0", allowInvalid = FALSE) %>%      # Replicate
-        hot_col(3, type = "numeric", format = "0.000", allowInvalid = FALSE)     # Value
+    # Configure column types
+    # First column is Time - make it numeric
+    ht <- ht %>% hot_col(1, type = "numeric", format = "0.000", allowInvalid = FALSE)
+    # Remaining columns are replicates - make them numeric with proper decimal handling
+    for(i in 2:ncol(values$raw_data)) {
+      ht <- ht %>% hot_col(i, type = "numeric", format = "0.000", allowInvalid = FALSE)
     }
     
     ht
@@ -330,16 +299,8 @@ server <- function(input, output, session) {
       df <- hot_to_r(input$data_input_table)
       
       # Ensure proper numeric conversion
-      if(input$data_structure == "wide") {
-        # Convert all columns to numeric
-        for(i in 1:ncol(df)) {
-          df[, i] <- as.numeric(df[, i])
-        }
-      } else {
-        # Convert specific columns
-        df$Time <- as.numeric(df$Time)
-        df$Replicate <- as.numeric(df$Replicate)
-        df$Value <- as.numeric(df$Value)
+      for(i in 1:ncol(df)) {
+        df[, i] <- as.numeric(df[, i])
       }
       
       values$raw_data <- df
@@ -352,22 +313,13 @@ server <- function(input, output, session) {
   observeEvent(input$add_row, {
     req(values$raw_data)
     
-    if(input$data_structure == "wide") {
-      new_row <- data.frame(matrix(NA, nrow = 1, ncol = ncol(values$raw_data)))
-      colnames(new_row) <- colnames(values$raw_data)
-      # Set time to next sequential value
-      new_row$Time <- max(values$raw_data$Time, na.rm = TRUE) + 1
-      # Set replicate columns to proper NA
-      for(i in 2:ncol(new_row)) {
-        new_row[, i] <- as.numeric(NA)
-      }
-    } else {
-      new_time <- max(values$raw_data$Time, na.rm = TRUE) + 1
-      new_row <- data.frame(
-        Time = rep(new_time, input$n_replicates),
-        Replicate = 1:input$n_replicates,
-        Value = as.numeric(NA)
-      )
+    new_row <- data.frame(matrix(NA, nrow = 1, ncol = ncol(values$raw_data)))
+    colnames(new_row) <- colnames(values$raw_data)
+    # Set time to next sequential value
+    new_row$Time <- max(values$raw_data$Time, na.rm = TRUE) + 1
+    # Set replicate columns to proper NA
+    for(i in 2:ncol(new_row)) {
+      new_row[, i] <- as.numeric(NA)
     }
     
     values$raw_data <- rbind(values$raw_data, new_row)
@@ -377,19 +329,10 @@ server <- function(input, output, session) {
   observeEvent(input$remove_row, {
     req(values$raw_data)
     
-    if(input$data_structure == "wide") {
-      if(nrow(values$raw_data) > 3) {
-        values$raw_data <- values$raw_data[-nrow(values$raw_data), ]
-      } else {
-        showNotification("Cannot remove row: minimum 3 time points required", type = "warning")
-      }
+    if(nrow(values$raw_data) > 3) {
+      values$raw_data <- values$raw_data[-nrow(values$raw_data), ]
     } else {
-      if(length(unique(values$raw_data$Time)) > 3) {
-        max_time <- max(values$raw_data$Time, na.rm = TRUE)
-        values$raw_data <- values$raw_data[values$raw_data$Time != max_time, ]
-      } else {
-        showNotification("Cannot remove row: minimum 3 time points required", type = "warning")
-      }
+      showNotification("Cannot remove row: minimum 3 time points required", type = "warning")
     }
   })
   
@@ -397,13 +340,9 @@ server <- function(input, output, session) {
   observeEvent(input$clear_data, {
     req(values$raw_data)
     
-    if(input$data_structure == "wide") {
-      # Keep time column, clear others
-      for(i in 2:ncol(values$raw_data)) {
-        values$raw_data[, i] <- as.numeric(NA)
-      }
-    } else {
-      values$raw_data$Value <- as.numeric(NA)
+    # Keep time column, clear others
+    for(i in 2:ncol(values$raw_data)) {
+      values$raw_data[, i] <- as.numeric(NA)
     }
   })
   
@@ -412,7 +351,7 @@ server <- function(input, output, session) {
     req(values$raw_data)
     
     tryCatch({
-      processed <- process_growth_data(values$raw_data, input$data_structure)
+      processed <- process_growth_data(values$raw_data, "wide")
       values$processed_data <- processed
       values$fitted <- FALSE
       
@@ -607,48 +546,6 @@ server <- function(input, output, session) {
       p <- plot_predictions_vs_observed(model, values$processed_data)
       ggplotly(p) %>% config(displayModeBar = TRUE, displaylogo = FALSE)
     }
-  })
-  
-  # Download template
-  output$download_template <- downloadHandler(
-    filename = function() {
-      paste0("growth_data_template_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      if(input$data_structure == "wide") {
-        template <- data.frame(
-          Time = c(0, 1, 2, 3, 4, 5),
-          Rep_1 = c(1.0, 1.5, 2.5, 4.0, 6.0, 8.0),
-          Rep_2 = c(1.1, 1.6, 2.4, 3.9, 6.1, 7.9),
-          Rep_3 = c(0.9, 1.4, 2.6, 4.1, 5.9, 8.1)
-        )
-      } else {
-        template <- data.frame(
-          Time = rep(c(0, 1, 2, 3, 4, 5), each = 3),
-          Replicate = rep(1:3, times = 6),
-          Value = c(1.0, 1.1, 0.9, 1.5, 1.6, 1.4, 2.5, 2.4, 2.6, 
-                    4.0, 3.9, 4.1, 6.0, 6.1, 5.9, 8.0, 7.9, 8.1)
-        )
-      }
-      write.csv(template, file, row.names = FALSE)
-    }
-  )
-  
-  # Upload data
-  observeEvent(input$upload_data, {
-    req(input$upload_data)
-    
-    tryCatch({
-      uploaded <- read.csv(input$upload_data$datapath)
-      values$raw_data <- uploaded
-      values$processed_data <- NULL
-      values$fitted <- FALSE
-      
-      showNotification("Data uploaded successfully!", type = "success")
-      
-    }, error = function(e) {
-      showNotification(paste("Error uploading data:", e$message), type = "error")
-    })
   })
 }
 
